@@ -1,0 +1,129 @@
+/* Welcome banner */
+.welcome-banner { margin-bottom: 28px; }
+.welcome-banner h1 { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+.welcome-banner p { color: var(--text-secondary); font-size: 15px; }
+
+/* QR Pass Card */
+.qr-card {
+  max-width: 480px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.qr-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 1px;
+  background: linear-gradient(135deg, #3B82F6, #1E3A5F, #3B82F6);
+  background-size: 200% 200%;
+  animation: borderShimmer 3s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+@keyframes borderShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+.qr-route { font-family: var(--font-mono); font-size: 15px; color: var(--accent-blue); margin-bottom: 4px; }
+.qr-bus { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+.qr-image { display: block; margin: 0 auto 20px; border: 3px solid var(--border-default); border-radius: var(--radius-sm); }
+.qr-dates { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.qr-pass-id { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+.qr-valid-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.qr-valid-badge.valid { background: #002D1A; color: var(--accent-green); border: 1px solid #005C35; }
+.qr-valid-badge.expired { background: #2D0000; color: var(--accent-red); border: 1px solid #5C0000; }
+
+/* Expiry arc */
+.expiry-arc { position: relative; width: 80px; height: 80px; }
+.expiry-arc svg { transform: rotate(-90deg); }
+.expiry-arc-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 18px; font-weight: 500;
+}
+.expiry-arc-text small { font-size: 10px; color: var(--text-muted); font-family: var(--font-ui); }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 48px 24px;
+  color: var(--text-secondary);
+}
+.empty-state svg { margin-bottom: 16px; opacity: 0.4; }
+.empty-state h3 { font-size: 18px; color: var(--text-primary); margin-bottom: 8px; }
+.empty-state p { font-size: 14px; margin-bottom: 20px; }
+
+/* Apply wizard */
+.wizard-steps {
+  display: flex; align-items: center; margin-bottom: 36px; gap: 0;
+}
+.wizard-step {
+  display: flex; align-items: center; gap: 8px; flex: 1;
+}
+.step-circle {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; flex-shrink: 0;
+  border: 2px solid var(--border-default); color: var(--text-muted);
+  transition: all var(--transition);
+}
+.step-circle.active { border-color: var(--accent-blue); background: var(--accent-blue); color: white; }
+.step-circle.done { border-color: var(--accent-green); background: var(--accent-green); color: white; }
+.step-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.step-label.active { color: var(--accent-blue); }
+.step-line { flex: 1; height: 2px; background: var(--border-default); margin: 0 8px; }
+.step-line.done { background: var(--accent-green); }
+
+.wizard-panels { overflow: hidden; }
+.wizard-panel { display: none; }
+.wizard-panel.active { display: block; }
+
+.route-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.route-card {
+  background: var(--bg-card); border: 2px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 20px; cursor: pointer;
+  transition: all var(--transition);
+}
+.route-card:hover { border-color: #2D5A9E; }
+.route-card.selected { border-color: var(--accent-blue); background: #0D1F3C; }
+.route-card-name { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.route-card-path { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; margin-bottom: 12px; }
+.route-card-meta { display: flex; justify-content: space-between; }
+.route-badge { font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+.route-badge-dist { background: #1E3A5F; color: var(--accent-blue); }
+.route-badge-fee { background: #1A2D1A; color: var(--accent-green); font-family: var(--font-mono); }
+
+.duration-cards { display: flex; gap: 16px; }
+.duration-card {
+  flex: 1; background: var(--bg-card); border: 2px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 20px; cursor: pointer;
+  text-align: center; transition: all var(--transition);
+}
+.duration-card:hover { border-color: #2D5A9E; }
+.duration-card.selected { border-color: var(--accent-blue); background: #0D1F3C; }
+.duration-months { font-size: 28px; font-weight: 700; color: var(--accent-blue); font-family: var(--font-mono); }
+.duration-label { font-size: 13px; color: var(--text-secondary); margin: 4px 0 12px; }
+.duration-fee { font-family: var(--font-mono); font-size: 16px; color: var(--accent-green); }
+
+.review-card { background: var(--bg-input); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px; }
+.review-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-default); font-size: 14px; }
+.review-row:last-child { border-bottom: none; font-weight: 600; font-size: 16px; }
+.review-row span:last-child { font-family: var(--font-mono); color: var(--accent-blue); }
+
+/* Confetti */
+.confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 9998; overflow: hidden; }
+.confetti-piece {
+  position: absolute; width: 10px; height: 10px; top: -10px;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+@media (max-width: 768px) {
+  .route-cards-grid { grid-template-columns: 1fr; }
+  .duration-cards { flex-direction: column; }
+}

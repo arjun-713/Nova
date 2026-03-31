@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — SmartBusPass</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <style>
+    .not-found { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+    .bus-lost { margin-bottom: 32px; }
+    .not-found h1 { font-family: var(--font-mono); font-size: 80px; color: var(--accent-blue); line-height: 1; margin-bottom: 8px; }
+    .not-found h2 { font-size: 22px; margin-bottom: 8px; }
+    .not-found p { color: var(--text-secondary); margin-bottom: 28px; }
+  </style>
+</head>
+<body>
+  <div class="not-found">
+    <div class="bus-lost">
+      <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
+        <rect x="10" y="20" width="80" height="40" rx="8" fill="#111827" stroke="#1E3A5F" stroke-width="2"/>
+        <rect x="18" y="28" width="18" height="14" rx="2" fill="#1E3A5F"/>
+        <rect x="42" y="28" width="18" height="14" rx="2" fill="#1E3A5F"/>
+        <rect x="66" y="28" width="16" height="14" rx="2" fill="#1E3A5F"/>
+        <circle cx="28" cy="62" r="8" fill="#1E3A5F" stroke="#3B82F6" stroke-width="2"/>
+        <circle cx="72" cy="62" r="8" fill="#1E3A5F" stroke="#3B82F6" stroke-width="2"/>
+        <path d="M95 40 Q110 30 115 45" stroke="#3B82F6" stroke-width="2" stroke-dasharray="4 3" fill="none"/>
+        <text x="100" y="25" fill="#4B6280" font-size="10" font-family="DM Mono, monospace">?</text>
+      </svg>
+    </div>
+    <h1>404</h1>
+    <h2>Bus got lost</h2>
+    <p>This page doesn't exist. The bus must have taken a wrong turn.</p>
+    <a href="/" class="btn-primary btn btn-home">Go Home</a>
+  </div>
+</body>
+</html>

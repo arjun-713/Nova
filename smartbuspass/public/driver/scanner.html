@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Driver Scanner — SmartBusPass</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <style>
+    body { background: var(--bg-primary); }
+    .driver-wrap { max-width: 480px; margin: 80px auto; padding: 20px; }
+    .driver-header { text-align: center; margin-bottom: 32px; }
+    .driver-header h1 { font-size: 24px; font-weight: 600; }
+    .driver-header p { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+
+    .scanner-box {
+      position: relative; width: 100%; aspect-ratio: 1;
+      background: #0A0F1C; border: 2px solid var(--border-default);
+      border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 20px;
+    }
+    #qr-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #qr-canvas { display: none; }
+
+    /* Corner brackets */
+    .corner { position: absolute; width: 28px; height: 28px; border-color: var(--accent-blue); border-style: solid; }
+    .corner-tl { top: 16px; left: 16px; border-width: 3px 0 0 3px; }
+    .corner-tr { top: 16px; right: 16px; border-width: 3px 3px 0 0; }
+    .corner-bl { bottom: 16px; left: 16px; border-width: 0 0 3px 3px; }
+    .corner-br { bottom: 16px; right: 16px; border-width: 0 3px 3px 0; }
+
+    .scan-line {
+      position: absolute; left: 16px; right: 16px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+      animation: scanMove 2s ease-in-out infinite;
+    }
+    @keyframes scanMove { 0%,100%{top:16px} 50%{top:calc(100% - 16px)} }
+
+    .result-flash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 9000;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .result-flash.show { opacity: 1; pointer-events: all; }
+    .result-flash.valid { background: rgba(16,185,129,0.95); }
+    .result-flash.invalid { background: rgba(239,68,68,0.95); }
+    .result-flash h2 { font-size: 48px; margin-bottom: 12px; }
+    .result-flash p { font-size: 18px; color: white; }
+    .result-flash .detail { font-family: var(--font-mono); font-size: 14px; margin-top: 8px; opacity: 0.85; }
+
+    .manual-section { margin-top: 20px; }
+    .manual-section h3 { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; text-align: center; }
+    .manual-row { display: flex; gap: 8px; }
+    .manual-row .form-input { flex: 1; }
+
+    .scan-history { margin-top: 24px; }
+    .scan-history h3 { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+    .scan-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 13px;
+    }
+    .scan-item .name { color: var(--text-primary); font-weight: 500; }
+    .scan-item .time { color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div id="page-loader">
+    <div class="loader-logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#1E3A5F"/><path d="M6 20V13a2 2 0 012-2h16a2 2 0 012 2v7M6 20h20M9 20v2m14-2v2M10 15h12" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="22" r="1.5" fill="#3B82F6"/><circle cx="22" cy="22" r="1.5" fill="#3B82F6"/></svg>
+      <span>SmartBusPass</span>
+    </div>
+    <div class="spinner"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#1E3A5F"/><path d="M6 20V13a2 2 0 012-2h16a2 2 0 012 2v7M6 20h20M9 20v2m14-2v2M10 15h12" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="22" r="1.5" fill="#3B82F6"/><circle cx="22" cy="22" r="1.5" fill="#3B82F6"/></svg>
+      Driver Panel
+    </div>
+    <div class="navbar-right">
+      <div class="nav-avatar-wrap">
+        <div class="avatar" id="nav-avatar">D</div>
+        <div class="avatar-dropdown" id="avatar-dropdown">
+          <a href="#" onclick="logout()">Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="driver-wrap">
+    <div class="driver-header">
+      <h1>QR Scanner</h1>
+      <p>Scan passenger bus pass QR codes</p>
+    </div>
+
+    <div class="scanner-box">
+      <video> id="qr-video" autoplay playsinline></video>
+      <canvas id="qr-canvas"></canvas>
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="scan-line"></div>
+    </div>
+
+    <div class="manual-section">
+      <h3>— or enter QR code manually —</h3>
+      <div class="manual-row">
+        <input type="text" class="form-input" id="manual-input" placeholder="Paste QR payload here" />
+        <button type="button" class="btn-primary btn-validate" onclick="validateManual()">Validate</button>
+      </div>
+    </div>
+
+    <div class="scan-history">
+      <h3>Recent Scans</h3>
+      <div id="scan-list"></div>
+    </div>
+  </div>
+
+  <!-- Result flash -->
+  <div class="result-flash" id="result-flash">
+    <h2 id="flash-icon">✓</h2>
+    <p id="flash-msg">Valid Pass</p>
+    <div class="detail" id="flash-detail"></div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="/js/scanner.js"></script>
+</body>
+</html>

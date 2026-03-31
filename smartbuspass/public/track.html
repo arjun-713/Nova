@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Track Bus — SmartBusPass</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { height: calc(100vh - 60px); width: 100%; }
+    .bus-marker { background: #1E3A5F; border: 2px solid #3B82F6; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.15);opacity:0.85} }
+    .bus-panel {
+      position: fixed; top: 60px; right: -320px; width: 300px; height: calc(100vh - 60px);
+      background: var(--bg-card); border-left: 1px solid var(--border-default);
+      padding: 24px; z-index: 500; transition: right 0.3s ease; overflow-y: auto;
+    }
+    .bus-panel.open { right: 0; }
+    .bus-panel-close { position: absolute; top: 16px; right: 16px; background: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+    .bus-panel h3 { font-family: var(--font-mono); color: var(--accent-blue); margin-bottom: 4px; }
+    .bus-panel .route-label { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+    .bus-info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-default); font-size: 14px; }
+    .bus-info-row span:first-child { color: var(--text-muted); }
+    .speed-badge { background: #1E3A5F; color: var(--accent-blue); padding: 2px 10px; border-radius: 20px; font-family: var(--font-mono); font-size: 13px; }
+    .no-buses { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; color: var(--text-secondary); z-index: 400; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="page-loader">
+    <div class="loader-logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#1E3A5F"/><path d="M6 20V13a2 2 0 012-2h16a2 2 0 012 2v7M6 20h20M9 20v2m14-2v2M10 15h12" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="22" r="1.5" fill="#3B82F6"/><circle cx="22" cy="22" r="1.5" fill="#3B82F6"/></svg>
+      <span>SmartBusPass</span>
+    </div>
+    <div class="spinner"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#1E3A5F"/><path d="M6 20V13a2 2 0 012-2h16a2 2 0 012 2v7M6 20h20M9 20v2m14-2v2M10 15h12" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="22" r="1.5" fill="#3B82F6"/><circle cx="22" cy="22" r="1.5" fill="#3B82F6"/></svg>
+      SmartBus
+    </div>
+    <div class="navbar-nav">
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/dashboard.html#passes">My Passes</a>
+      <a href="/track.html" class="active">Track Bus</a>
+      <a href="/apply.html">Apply</a>
+    </div>
+    <div class="navbar-right">
+      <div class="nav-avatar-wrap">
+        <div class="avatar" id="nav-avatar">?</div>
+        <div class="avatar-dropdown" id="avatar-dropdown">
+          <a href="#" onclick="logout()">Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div id="map"></div>
+  <div class="bus-panel" id="bus-panel">
+    <button type="button" class="bus-panel-close" onclick="document.getElementById('bus-panel').classList.remove('open')" aria-label="Close panel">✕</button>
+    <h3 id="panel-bus-num">—</h3>
+    <div class="route-label" id="panel-route">—</div>
+    <div class="bus-info-row"><span>Speed</span><span class="speed-badge" id="panel-speed">— km/h</span></div>
+    <div class="bus-info-row"><span>Last Updated</span><span id="panel-updated">—</span></div>
+    <div class="bus-info-row"><span>ETA to Next Stop</span><span class="eta-value" id="panel-eta">— min</span></div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/js/track.js"></script>
+</body>
+</html>

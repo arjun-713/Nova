@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — SmartBusPass</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div id="page-loader">
+    <div class="loader-logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#1E3A5F"/><path d="M6 20V13a2 2 0 012-2h16a2 2 0 012 2v7M6 20h20M9 20v2m14-2v2M10 15h12" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="22" r="1.5" fill="#3B82F6"/><circle cx="22" cy="22" r="1.5" fill="#3B82F6"/></svg>
+      <span>SmartBusPass</span>
+    </div>
+    <div class="spinner"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#1E3A5F"/><path d="M6 20V13a2 2 0 012-2h16a2 2 0 012 2v7M6 20h20M9 20v2m14-2v2M10 15h12" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="22" r="1.5" fill="#3B82F6"/><circle cx="22" cy="22" r="1.5" fill="#3B82F6"/></svg>
+      SmartBus
+    </div>
+    <div class="navbar-nav">
+      <a href="/dashboard.html" class="active">Dashboard</a>
+      <a href="/dashboard.html#passes">My Passes</a>
+      <a href="/track.html">Track Bus</a>
+      <a href="/apply.html">Apply</a>
+    </div>
+    <div class="navbar-right">
+      <button type="button" class="hamburger" id="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      <div class="nav-avatar-wrap">
+        <div class="avatar" id="nav-avatar">?</div>
+        <div class="avatar-dropdown" id="avatar-dropdown">
+          <a href="#" onclick="logout()">Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <a class="sidebar-link active" href="/dashboard.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a class="sidebar-link" href="/dashboard.html#passes">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 10h2M16 14h2M6 10h6M6 14h4"/></svg>
+        My Passes
+      </a>
+      <a class="sidebar-link" href="/track.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Track Bus
+      </a>
+      <a class="sidebar-link" href="/apply.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Apply for Pass
+      </a>
+    </aside>
+
+    <main class="main-content">
+      <div class="welcome-banner">
+        <h1 id="welcome-text">Good morning 👋</h1>
+        <p id="pass-status-text">Loading your pass status...</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-blue">🎫</div>
+          <div>
+            <div class="stat-value" id="stat-route">—</div>
+            <div class="stat-label">Active Pass Route</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-green">
+            <div class="expiry-arc">
+              <svg width="60" height="60" viewBox="0 0 60 60">
+                <circle cx="30" cy="30" r="24" fill="none" stroke="#1E3A5F" stroke-width="4"/>
+                <circle id="expiry-arc-circle" cx="30" cy="30" r="24" fill="none" stroke="#10B981" stroke-width="4" stroke-dasharray="150.8" stroke-dashoffset="150.8" stroke-linecap="round"/>
+              </svg>
+              <div class="expiry-arc-text"><span id="days-left">—</span><small>days</small></div>
+            </div>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-expiry">—</div>
+            <div class="stat-label">Pass Expiry</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-dark">🚌</div>
+          <div>
+            <div class="stat-value" id="stat-eta">— min</div>
+            <div class="stat-label">Next Bus ETA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR Card -->
+      <div id="qr-section" class="qr-section-wrap"></div>
+
+      <!-- Pass History -->
+      <div class="card" id="passes">
+        <div class="section-header">
+          <h2 class="section-title">Pass History</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Pass ID</th><th>Route</th><th>Applied</th><th>Expiry</th><th>Status</th></tr></thead>
+            <tbody id="passes-tbody"><tr><td colspan="5"><div class="skeleton skeleton-row"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
