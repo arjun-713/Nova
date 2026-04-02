@@ -1,8 +1,20 @@
 const db = require('../db/connection');
 const { verifyPayload } = require('../utils/qrGenerator');
+const USE_DUMMY_AUTH = String(process.env.USE_DUMMY_AUTH || 'true').toLowerCase() === 'true';
+
+const dummyBuses = [
+  { bus_id: 1, bus_number: 'KA-01-BUS-001', route_name: 'Route A - City Express', latitude: 12.9716, longitude: 77.5946, speed_kmh: 24.2 },
+  { bus_id: 2, bus_number: 'KA-01-BUS-002', route_name: 'Route B - North Line', latitude: 12.9650, longitude: 77.6020, speed_kmh: 31.5 },
+  { bus_id: 3, bus_number: 'KA-01-BUS-003', route_name: 'Route C - South Connect', latitude: 12.9560, longitude: 77.6100, speed_kmh: 18.7 }
+];
+const dummyGpsHistory = {};
 
 async function updateGPS(req, res) {
   try {
+    if (USE_DUMMY_AUTH) {
+      return res.json({ success: true });
+    }
+
     const { bus_id, latitude, longitude, speed_kmh } = req.body;
     await db.execute(
       'INSERT INTO gps_logs (bus_id, latitude, longitude, speed_kmh) VALUES (?,?,?,?)',
@@ -17,6 +29,26 @@ async function updateGPS(req, res) {
 
 async function getLive(req, res) {
   try {
+    if (USE_DUMMY_AUTH) {
+      const now = new Date();
+      const buses = dummyBuses.map((bus, idx) => {
+        const t = Date.now() / 10000 + idx;
+        const latitude = bus.latitude + Math.sin(t) * 0.003;
+        const longitude = bus.longitude + Math.cos(t) * 0.003;
+        const speed = Math.max(8, bus.speed_kmh + Math.sin(t * 1.3) * 4);
+        return {
+          bus_id: bus.bus_id,
+          bus_number: bus.bus_number,
+          route_name: bus.route_name,
+          latitude: latitude.toFixed(7),
+          longitude: longitude.toFixed(7),
+          speed_kmh: speed.toFixed(2),
+          recorded_at: now.toISOString()
+        };
+      });
+      return res.json({ success: true, buses });
+    }
+
     const [rows] = await db.execute(
       `SELECT g.bus_id, b.bus_number, r.route_name, g.latitude, g.longitude, g.speed_kmh, g.recorded_at
        FROM gps_logs g
@@ -34,6 +66,11 @@ async function getLive(req, res) {
 
 async function getBusHistory(req, res) {
   try {
+    if (USE_DUMMY_AUTH) {
+      const { busId } = req.params;
+      return res.json({ success: true, history: dummyGpsHistory[busId] || [] });
+    }
+
     const { busId } = req.params;
     const hours = parseInt(req.query.hours) || 1;
     const [rows] = await db.execute(
@@ -51,6 +88,20 @@ async function getBusHistory(req, res) {
 
 async function validateScan(req, res) {
   try {
+    if (USE_DUMMY_AUTH) {
+      const { qr_payload } = req.body;
+      if (!qr_payload) {
+        return res.json({ valid: false, message: 'No QR data provided.' });
+      }
+      return res.json({
+        valid: true,
+        passengerName: 'Dummy Passenger',
+        routeName: 'Route A - City Express',
+        expiryDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+        message: 'Valid pass (dummy mode).'
+      });
+    }
+
     const { qr_payload, bus_id } = req.body;
     if (!qr_payload) return res.json({ valid: false, message: 'No QR data provided.' });
 

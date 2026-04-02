@@ -1,6 +1,28 @@
 const bcrypt = require('bcryptjs');
 const db = require('../db/connection');
 
+const USE_DUMMY_AUTH = String(process.env.USE_DUMMY_AUTH || 'true').toLowerCase() === 'true';
+
+const dummyUsers = [
+  {
+    user_id: 1,
+    full_name: 'Super Admin',
+    email: 'admin@smartbus.com',
+    phone: '9999999999',
+    password_hash: bcrypt.hashSync('password', 10),
+    role: 'ADMIN'
+  },
+  {
+    user_id: 2,
+    full_name: 'Test Driver',
+    email: 'driver@smartbus.com',
+    phone: '8888888888',
+    password_hash: bcrypt.hashSync('password', 10),
+    role: 'DRIVER'
+  }
+];
+let nextDummyUserId = 3;
+
 async function register(req, res) {
   try {
     const { full_name, email, phone, password, role } = req.body;
@@ -23,10 +45,29 @@ async function register(req, res) {
     const userRole = allowedRoles.includes(role) ? role : 'PASSENGER';
 
     const hash = await bcrypt.hash(password, 10);
-    await db.execute(
-      'INSERT INTO users (full_name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, ?)',
-      [full_name, email, phone, hash, userRole]
-    );
+    if (USE_DUMMY_AUTH) {
+      const normalizedEmail = email.toLowerCase();
+      const exists = dummyUsers.some(
+        (u) => u.email.toLowerCase() === normalizedEmail || u.phone === phone
+      );
+      if (exists) {
+        return res.json({ success: false, message: 'Email or phone already registered.' });
+      }
+
+      dummyUsers.push({
+        user_id: nextDummyUserId++,
+        full_name,
+        email,
+        phone,
+        password_hash: hash,
+        role: userRole
+      });
+    } else {
+      await db.execute(
+        'INSERT INTO users (full_name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+        [full_name, email, phone, hash, userRole]
+      );
+    }
 
     res.json({ success: true, message: 'Account created. You can now log in.' });
   } catch (err) {
@@ -45,12 +86,20 @@ async function login(req, res) {
       return res.json({ success: false, message: 'Email and password are required.' });
     }
 
-    const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-    if (!rows.length) {
-      return res.json({ success: false, message: 'Invalid email or password.' });
+    let user;
+    if (USE_DUMMY_AUTH) {
+      user = dummyUsers.find((u) => u.email.toLowerCase() === String(email).toLowerCase());
+      if (!user) {
+        return res.json({ success: false, message: 'Invalid email or password.' });
+      }
+    } else {
+      const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
+      if (!rows.length) {
+        return res.json({ success: false, message: 'Invalid email or password.' });
+      }
+      user = rows[0];
     }
 
-    const user = rows[0];
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) {
       return res.json({ success: false, message: 'Invalid email or password.' });

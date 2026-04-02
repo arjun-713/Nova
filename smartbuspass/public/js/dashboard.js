@@ -18,6 +18,13 @@
   const passes = data.passes || [];
 
   const approved = passes.find(p => p.status === 'APPROVED');
+  const pending = passes.find(p => p.status === 'PENDING');
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get('applied') === '1') {
+    showToast('Application submitted. Your dashboard has been refreshed.', 'success');
+    history.replaceState({}, '', `${window.location.pathname}${window.location.hash || ''}`);
+  }
 
   if (approved) {
     document.getElementById('stat-route').textContent = approved.route_name.split(' - ')[0] || approved.route_name;
@@ -51,6 +58,31 @@
         <span class="qr-valid-badge ${daysLeft > 0 ? 'valid' : 'expired'}">
           ${daysLeft > 0 ? '✓ Valid' : '✗ Expired'}
         </span>
+      </div>`;
+  } else if (pending) {
+    document.getElementById('stat-route').textContent = pending.route_name.split(' - ')[0] || pending.route_name;
+    document.getElementById('days-left').textContent = '...';
+    document.getElementById('stat-expiry').textContent = 'Pending';
+    document.getElementById('pass-status-text').textContent = `Latest application pending approval for ${pending.route_name}`;
+
+    document.getElementById('expiry-arc-circle').style.stroke = 'var(--accent-yellow)';
+    document.getElementById('expiry-arc-circle').style.strokeDashoffset = 90;
+
+    document.getElementById('qr-section').innerHTML = `
+      <div class="pending-pass-card">
+        <div class="pending-pass-head">
+          <div>
+            <div class="qr-route">${pending.route_name}</div>
+            <div class="qr-bus">${pending.start_point} → ${pending.end_point}</div>
+          </div>
+          ${statusBadge(pending.status)}
+        </div>
+        <p class="pending-pass-copy">Your application is in review. The pass will move here as an active pass as soon as it is approved.</p>
+        <div class="review-card">
+          <div class="review-row"><span>Application ID</span><span>#${String(pending.pass_id).padStart(6,'0')}</span></div>
+          <div class="review-row"><span>Applied On</span><span>${fmtDate(pending.created_at)}</span></div>
+          <div class="review-row"><span>Expected Expiry</span><span>${fmtDate(pending.expiry_date)}</span></div>
+        </div>
       </div>`;
   } else {
     document.getElementById('stat-route').textContent = 'None';

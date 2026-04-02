@@ -5,24 +5,130 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Track Bus — SmartBusPass</title>
   <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    #map { height: calc(100vh - 60px); width: 100%; }
-    .bus-marker { background: #1E3A5F; border: 2px solid #3B82F6; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; animation: pulse 2s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.15);opacity:0.85} }
-    .bus-panel {
-      position: fixed; top: 60px; right: -320px; width: 300px; height: calc(100vh - 60px);
-      background: var(--bg-card); border-left: 1px solid var(--border-default);
-      padding: 24px; z-index: 500; transition: right 0.3s ease; overflow-y: auto;
+    .track-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
+      gap: 20px;
+      align-items: start;
     }
-    .bus-panel.open { right: 0; }
-    .bus-panel-close { position: absolute; top: 16px; right: 16px; background: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
-    .bus-panel h3 { font-family: var(--font-mono); color: var(--accent-blue); margin-bottom: 4px; }
-    .bus-panel .route-label { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
-    .bus-info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-default); font-size: 14px; }
-    .bus-info-row span:first-child { color: var(--text-muted); }
-    .speed-badge { background: #1E3A5F; color: var(--accent-blue); padding: 2px 10px; border-radius: 20px; font-family: var(--font-mono); font-size: 13px; }
-    .no-buses { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; color: var(--text-secondary); z-index: 400; pointer-events: none; }
+    .track-map-card,
+    .track-panel-card {
+      padding: 20px;
+    }
+    .map-frame {
+      position: relative;
+    }
+    .track-map-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .track-map-head h2 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .track-map-head p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .track-map-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #1E3A5F22;
+      border: 1px solid var(--border-default);
+      color: var(--accent-blue);
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+    #map {
+      height: 560px;
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .bus-marker {
+      background: #1E3A5F;
+      border: 2px solid #3B82F6;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 0.85; }
+    }
+    .bus-panel-head {
+      margin-bottom: 18px;
+    }
+    .bus-panel-head h3 {
+      font-family: var(--font-mono);
+      color: var(--accent-blue);
+      margin-bottom: 4px;
+    }
+    .route-label {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .bus-info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-default);
+      font-size: 14px;
+    }
+    .bus-info-row span:first-child {
+      color: var(--text-muted);
+    }
+    .speed-badge {
+      background: #1E3A5F;
+      color: var(--accent-blue);
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+    .track-placeholder {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .track-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      text-align: center;
+      background: rgba(10, 15, 28, 0.82);
+      backdrop-filter: blur(2px);
+      border-radius: 14px;
+      z-index: 200;
+    }
+    @media (max-width: 1024px) {
+      .track-grid {
+        grid-template-columns: 1fr;
+      }
+      #map,
+      .track-empty {
+        min-height: 420px;
+        height: 420px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -34,35 +140,83 @@
     <div class="spinner"></div>
   </div>
 
-  <nav class="navbar">
-    <div class="navbar-brand">
-      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#1E3A5F"/><path d="M6 20V13a2 2 0 012-2h16a2 2 0 012 2v7M6 20h20M9 20v2m14-2v2M10 15h12" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="22" r="1.5" fill="#3B82F6"/><circle cx="22" cy="22" r="1.5" fill="#3B82F6"/></svg>
-      SmartBus
-    </div>
-    <div class="navbar-nav">
-      <a href="/dashboard.html">Dashboard</a>
-      <a href="/dashboard.html#passes">My Passes</a>
-      <a href="/track.html" class="active">Track Bus</a>
-      <a href="/apply.html">Apply</a>
-    </div>
-    <div class="navbar-right">
-      <div class="nav-avatar-wrap">
-        <div class="avatar" id="nav-avatar">?</div>
-        <div class="avatar-dropdown" id="avatar-dropdown">
-          <a href="#" onclick="logout()">Sign Out</a>
+  <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle navigation">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#1E3A5F"/><path d="M6 20V13a2 2 0 012-2h16a2 2 0 012 2v7M6 20h20M9 20v2m14-2v2M10 15h12" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="22" r="1.5" fill="#3B82F6"/><circle cx="22" cy="22" r="1.5" fill="#3B82F6"/></svg>
+          <span>SmartBus</span>
         </div>
       </div>
-    </div>
-  </nav>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="/dashboard.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a class="sidebar-link" href="/dashboard.html#passes">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 10h2M16 14h2M6 10h6M6 14h4"/></svg>
+          My Passes
+        </a>
+        <a class="sidebar-link active" href="/track.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Track Bus
+        </a>
+        <a class="sidebar-link" href="/apply.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Apply for Pass
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-profile">
+          <div class="avatar" id="sidebar-avatar">?</div>
+          <div>
+            <div class="sidebar-user-name" id="sidebar-user-name">Loading...</div>
+            <div class="sidebar-user-role" id="sidebar-user-role">Passenger Account</div>
+          </div>
+        </div>
+        <div class="sidebar-footer-actions">
+          <a href="/dashboard.html" class="btn-primary btn">Back to Dashboard</a>
+          <button type="button" class="sidebar-signout" onclick="logout()">Sign Out</button>
+        </div>
+      </div>
+    </aside>
 
-  <div id="map"></div>
-  <div class="bus-panel" id="bus-panel">
-    <button type="button" class="bus-panel-close" onclick="document.getElementById('bus-panel').classList.remove('open')" aria-label="Close panel">✕</button>
-    <h3 id="panel-bus-num">—</h3>
-    <div class="route-label" id="panel-route">—</div>
-    <div class="bus-info-row"><span>Speed</span><span class="speed-badge" id="panel-speed">— km/h</span></div>
-    <div class="bus-info-row"><span>Last Updated</span><span id="panel-updated">—</span></div>
-    <div class="bus-info-row"><span>ETA to Next Stop</span><span class="eta-value" id="panel-eta">— min</span></div>
+    <main class="main-content">
+      <div class="welcome-banner">
+        <h1>Track Bus</h1>
+        <p>Live buses stay visible inside the main content area so you can move between sections without losing navigation.</p>
+      </div>
+
+      <div class="track-grid">
+        <section class="card track-map-card">
+          <div class="track-map-head">
+            <div>
+              <h2>Live Map</h2>
+              <p>Select a bus marker to inspect route, speed, and ETA.</p>
+            </div>
+            <div class="track-map-meta" id="live-bus-count">0 buses live</div>
+          </div>
+          <div class="map-frame">
+            <div id="map"></div>
+          </div>
+        </section>
+
+        <aside class="card track-panel-card" id="bus-panel">
+          <div class="bus-panel-head">
+            <h3 id="panel-bus-num">Select a bus</h3>
+            <div class="route-label" id="panel-route">The latest vehicle details will appear here.</div>
+          </div>
+          <div class="bus-info-row"><span>Speed</span><span class="speed-badge" id="panel-speed">— km/h</span></div>
+          <div class="bus-info-row"><span>Last Updated</span><span id="panel-updated">—</span></div>
+          <div class="bus-info-row"><span>ETA to Next Stop</span><span class="eta-value" id="panel-eta">— min</span></div>
+          <p class="track-placeholder" id="panel-placeholder">Use the map to choose any active bus. The side navigation remains available while the map stays embedded here.</p>
+        </aside>
+      </div>
+    </main>
   </div>
 
   <script src="/js/main.js"></script>

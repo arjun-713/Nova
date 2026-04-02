@@ -80,7 +80,7 @@
       <div class="nav-avatar-wrap">
         <div class="avatar" id="nav-avatar">D</div>
         <div class="avatar-dropdown" id="avatar-dropdown">
-          <a href="#" onclick="logout()">Sign Out</a>
+          <a href="#" onclick="logout(); return false;">Sign Out</a>
         </div>
       </div>
     </div>
@@ -93,7 +93,7 @@
     </div>
 
     <div class="scanner-box">
-      <video> id="qr-video" autoplay playsinline></video>
+      <video id="qr-video" autoplay playsinline></video>
       <canvas id="qr-canvas"></canvas>
       <div class="corner corner-tl"></div>
       <div class="corner corner-tr"></div>

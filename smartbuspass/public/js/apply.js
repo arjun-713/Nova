@@ -88,6 +88,11 @@ function renderReview() {
 }
 
 async function submitApplication() {
+  if (!selectedRoute || !selectedDuration) {
+    showToast('Select a route and duration first.', 'error');
+    return;
+  }
+
   const btn = document.getElementById('submit-btn');
   btn.textContent = 'Processing...'; btn.disabled = true;
   try {
@@ -100,7 +105,7 @@ async function submitApplication() {
       launchConfetti();
       btn.textContent = '✓ Submitted!';
       btn.style.background = 'var(--accent-green)';
-      setTimeout(() => window.location.href = '/dashboard.html', 2500);
+      setTimeout(() => window.location.href = '/dashboard.html?applied=1#passes', 1200);
     } else {
       showToast(data.message, 'error');
       btn.textContent = 'Pay & Submit'; btn.disabled = false;

@@ -37,6 +37,26 @@
 .qr-valid-badge.valid { background: #002D1A; color: var(--accent-green); border: 1px solid #005C35; }
 .qr-valid-badge.expired { background: #2D0000; color: var(--accent-red); border: 1px solid #5C0000; }
 
+.pending-pass-card {
+  max-width: 560px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+.pending-pass-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.pending-pass-copy {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
 /* Expiry arc */
 .expiry-arc { position: relative; width: 80px; height: 80px; }
 .expiry-arc svg { transform: rotate(-90deg); }
